@@ -1,0 +1,115 @@
+<html>
+<head>
+
+    <style type="text/css">
+        body, button {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+    </style>
+
+</head>
+<body>
+
+<div style="width:50px; height:50px; margin:100px auto;text-align:center;line-height:50px;">
+    <img id="img" src="">
+</div>
+<div id='base64' style='width:100%;word-break: break-all;opacity:.5'></div>
+
+<div style="text-align:right;margin:20px 10px;">
+    <button onclick="rotateImg(-90)" style="background:#888;border:none;padding:10px 20px;color:white">逆旋转</button>
+    <button onclick="rotateImg(90)" style="background:#888;border:none;padding:10px 20px;color:white">正旋转</button>
+</div>
+</body>
+<script>
+    function rotateImg(d) {
+        edg = edg + d;
+        rotateBase64Img(url, edg, callback);
+    }
+
+
+    function rotateBase64Img(src, edg, callback) {
+        var canvas = document.createElement("canvas");
+        var ctx = canvas.getContext("2d");
+
+        var imgW;//图片宽度
+        var imgH;//图片高度
+        var size;//canvas初始大小
+
+        if (edg % 90 != 0) {
+            console.error("旋转角度必须是90的倍数!");
+            throw '旋转角度必须是90的倍数!';
+        }
+        (edg < 0) && (edg = (edg % 360) + 360)
+        const quadrant = (edg / 90) % 4; //旋转象限
+        const cutCoor = {sx: 0, sy: 0, ex: 0, ey: 0}; //裁剪坐标
+
+        var image = new Image();
+        image.crossOrigin = "anonymous"
+        image.src = src;
+
+        image.onload = function () {
+
+            imgW = image.width;
+            imgH = image.height;
+            size = imgW > imgH ? imgW : imgH;
+
+            canvas.width = size * 2;
+            canvas.height = size * 2;
+            switch (quadrant) {
+                case 0:
+                    cutCoor.sx = size;
+                    cutCoor.sy = size;
+                    cutCoor.ex = size + imgW;
+                    cutCoor.ey = size + imgH;
+                    break;
+                case 1:
+                    cutCoor.sx = size - imgH;
+                    cutCoor.sy = size;
+                    cutCoor.ex = size;
+                    cutCoor.ey = size + imgW;
+                    break;
+                case 2:
+                    cutCoor.sx = size - imgW;
+                    cutCoor.sy = size - imgH;
+                    cutCoor.ex = size;
+                    cutCoor.ey = size;
+                    break;
+                case 3:
+                    cutCoor.sx = size;
+                    cutCoor.sy = size - imgW;
+                    cutCoor.ex = size + imgH;
+                    cutCoor.ey = size + imgW;
+                    break;
+            }
+
+
+            ctx.translate(size, size);
+            ctx.rotate(edg * Math.PI / 180);
+            ctx.drawImage(image, 0, 0);
+
+            var imgData = ctx.getImageData(cutCoor.sx, cutCoor.sy, cutCoor.ex, cutCoor.ey);
+            if (quadrant % 2 == 0) {
+                canvas.width = imgW;
+                canvas.height = imgH;
+            } else {
+                canvas.width = imgH;
+                canvas.height = imgW;
+            }
+            ctx.putImageData(imgData, 0, 0);
+            callback(canvas.toDataURL())
+        };
+    }
+
+    var edg = 90;
+    const url = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAoCAYAAAC8cqlMAAABkUlEQVRoQ+2WsUoDQRCG/5RaB43WKSzURlLYmEYQItgI2voEdpapLNPlAUJKLWyECIJVmhTBRhufQNQH0DIyHEuW487bnZs5Qpwr727n9pvvn+Vqg/pshiW4agayYBbNyIIJgRkxI0odsGgpNZZd9n8Z2TwANtrA8zW7YdELY79ZaIQKHt0l+3jpVwOzsg6cPAGrDeBrCow6xX2IAqkCxoeg731/ALc7AiBUwreiCZOGCLVBeyo04npRBcz5axInumIgokC0zZSBiAbRgjl+ANZaPBMuMcHR8sctHbPJFfA2LB7IrDckIFhG8maGA+NDhJ5Oee1iGZGAkYQoZcTBbF0A+715n0LMSEOIgFCRNMzjKfA+zg5BGuL+EPj55M2Xv6pUtPxCIWa0IMSM5MXMN6MJIQ6SFzP6c969THDpdJKKk0q0/oqZe6YFoWLEbXqvO7fg7t1sywx21tEgNuxZxQmmeZY80YiTerTKH6bxFVSNxG+Hv8JA+L3TWWlGdPrKr2pG+L3TWWlGdPrKr7o0Rn4BaLHzqU367GsAAAAASUVORK5CYII=`;
+
+    function callback(base64data) {
+        document.getElementById("img").src = base64data;
+        document.getElementById("base64").innerHTML = base64data;
+    }
+
+    document.getElementById("img").src = url;
+    document.getElementById("base64").innerHTML = url;
+
+</script>
+</html>
